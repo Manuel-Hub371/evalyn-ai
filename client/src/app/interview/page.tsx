@@ -2,17 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
-import { AIAvatar } from '@/components/interview/ai-avatar'
 import { VideoPreview } from '@/components/interview/video-preview'
-import { QuestionDisplay } from '@/components/interview/question-display'
-import { TranscriptPanel } from '@/components/interview/transcript-panel'
 import { useInterviewStore } from '@/store/interview-store'
-import { useSettingsStore } from '@/store/settings-store'
-import { mockInterviewInvitation, sampleQuestions } from '@/lib/mock-data'
+import { mockInterviewInvitation, mockInterviewSession, sampleQuestions } from '@/lib/mock-data'
 import { formatTime, generateId } from '@/lib/utils'
 import {
   Mic,
@@ -20,20 +15,19 @@ import {
   Video,
   VideoOff,
   Settings,
-  HelpCircle,
-  Square,
-  Clock,
-  Wifi,
   Building2,
-  ChevronRight,
-  CheckCircle2,
-  Circle,
+  Monitor,
+  Move,
+  ArrowUpLeft,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ArrowDownRight,
+  ArrowLeftRight,
 } from 'lucide-react'
 
 export default function InterviewPage() {
   const router = useRouter()
   const {
-    session,
     currentQuestion,
     setCurrentQuestion,
     aiState,
@@ -46,22 +40,20 @@ export default function InterviewPage() {
     setLiveTranscript,
     addTranscriptEntry,
     updateProgress,
-    connectionStatus,
   } = useInterviewStore()
 
   const [elapsedTime, setElapsedTime] = useState(0)
   const [currentStageIndex, setCurrentStageIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
+  const [cameraPosition, setCameraPosition] = useState<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>('bottom-right')
+  const [isSwapped, setIsSwapped] = useState(false) // false = AI large, true = Camera large
 
-  // Simulate interview flow
   useEffect(() => {
-    // Start with first question
     if (!currentQuestion) {
       askNextQuestion()
     }
 
-    // Timer
     const timer = setInterval(() => {
       setElapsedTime((prev) => prev + 1)
     }, 1000)
@@ -74,7 +66,6 @@ export default function InterviewPage() {
     const currentStage = stages[currentStageIndex]
 
     if (!currentStage) {
-      // Interview complete
       completeInterview()
       return
     }
@@ -83,19 +74,16 @@ export default function InterviewPage() {
     const question = questions[currentQuestionIndex]
 
     if (!question) {
-      // Move to next stage
       setCurrentStageIndex(currentStageIndex + 1)
       setCurrentQuestionIndex(0)
       return
     }
 
-    // Set AI to speaking
     setAIState({
       status: 'speaking',
       currentMessage: question,
     })
 
-    // Create question object
     const questionObj = {
       id: generateId(),
       text: question,
@@ -106,7 +94,6 @@ export default function InterviewPage() {
 
     setCurrentQuestion(questionObj)
 
-    // After 3 seconds, AI stops speaking and starts listening
     setTimeout(() => {
       setAIState({ status: 'listening' })
       startListening()
@@ -114,13 +101,10 @@ export default function InterviewPage() {
   }
 
   const startListening = () => {
-    // Simulate candidate speaking
     const phrases = [
       'Well, let me think about that...',
       'In my previous role, I...',
       'I believe the key to this is...',
-      'From my experience...',
-      'I would approach this by...',
     ]
 
     let phraseIndex = 0
@@ -139,7 +123,6 @@ export default function InterviewPage() {
   }
 
   const finishResponse = (transcript: string) => {
-    // Add to transcript
     addTranscriptEntry({
       id: generateId(),
       speaker: 'candidate',
@@ -147,19 +130,11 @@ export default function InterviewPage() {
       timestamp: new Date(),
     })
 
-    // Clear live transcript
     setLiveTranscript('')
-
-    // AI is thinking
     setAIState({ status: 'thinking' })
 
-    // After 2 seconds, move to next question
     setTimeout(() => {
       const stages = sampleQuestions
-      const currentStage = stages[currentStageIndex]
-      const totalQuestionsInStage = currentStage.questions.length
-
-      // Update progress
       const totalQuestions = stages.reduce(
         (sum, stage) => sum + stage.questions.length,
         0
@@ -174,7 +149,6 @@ export default function InterviewPage() {
       const progress = (completedQuestions / totalQuestions) * 100
       updateProgress(progress)
 
-      // Move to next question
       setCurrentQuestionIndex(currentQuestionIndex + 1)
       askNextQuestion()
     }, 2000)
@@ -194,284 +168,329 @@ export default function InterviewPage() {
   }
 
   const stages = sampleQuestions
-  const currentStage = stages[currentStageIndex]
-  const estimatedEndTime = new Date(Date.now() + 3600000) // 1 hour from now
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Top Navigation Bar */}
-      <div className="h-16 bg-card border-b flex items-center px-6">
-        <div className="flex items-center gap-4 flex-1">
-          {/* Company Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-primary" />
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Left Sidebar */}
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+              <Building2 className="h-6 w-6 text-white" />
             </div>
-            <span className="font-semibold text-foreground hidden sm:inline">
-              {mockInterviewInvitation.companyName}
-            </span>
+            <div>
+              <h2 className="text-sm font-semibold text-gray-900">
+                {mockInterviewInvitation.companyName}
+              </h2>
+              <p className="text-xs text-gray-500">Interview Platform</p>
+            </div>
           </div>
 
-          {/* Progress Bar */}
-          <div className="flex-1 max-w-md mx-auto">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium text-muted-foreground">
-                Interview Progress
-              </span>
-              <span className="text-xs font-medium text-primary">
-                {Math.round(session?.progress || 0)}%
-              </span>
+          <div className="space-y-3">
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Candidate:</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {mockInterviewSession.candidateName}
+              </p>
             </div>
-            <Progress value={session?.progress || 0} className="h-2" />
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Job Title:</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {mockInterviewInvitation.jobPosition}
+              </p>
+            </div>
           </div>
+        </div>
 
-          {/* Time & Status */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <span className="font-mono text-foreground">
-                {formatTime(elapsedTime)}
-              </span>
-            </div>
+        <div className="flex-1 p-6 overflow-y-auto">
+          <h3 className="text-sm font-semibold text-gray-900 mb-4">Interview Topics</h3>
+          <div className="space-y-2">
+            {stages.map((stage, index) => {
+              const isCompleted = index < currentStageIndex
+              const isCurrent = index === currentStageIndex
 
-            <Badge
-              variant={
-                connectionStatus.status === 'connected' ? 'default' : 'warning'
-              }
-              className="gap-1.5"
-            >
-              <Wifi className="h-3 w-3" />
-              {connectionStatus.status === 'connected'
-                ? 'Connected'
-                : 'Reconnecting'}
-            </Badge>
-
-            {mockInterviewInvitation.recordingEnabled && (
-              <Badge variant="destructive" className="gap-1.5 animate-pulse">
-                <div className="w-2 h-2 rounded-full bg-white" />
-                REC
-              </Badge>
-            )}
+              return (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg border ${
+                    isCurrent
+                      ? 'bg-blue-50 border-blue-200'
+                      : isCompleted
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <span className={`text-sm font-medium ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-green-900' : 'text-gray-600'}`}>
+                    {stage.stage}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
 
-      {/* Main Content - 3 Column Layout */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-hidden">
-        {/* Left Panel - AI Interviewer + Question */}
-        <div className="lg:col-span-6 flex flex-col gap-6">
-          {/* AI Avatar */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <AIAvatar state={aiState} className="mb-6" />
-          </motion.div>
-
-          {/* Current Question */}
-          <AnimatePresence mode="wait">
-            <QuestionDisplay
-              key={currentQuestion?.id}
-              question={currentQuestion}
-              className="flex-1"
-            />
-          </AnimatePresence>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
+          <h1 className="text-lg font-semibold text-gray-900">
+            {mockInterviewInvitation.companyName} Interview
+          </h1>
+          <div className="flex items-center gap-4">
+            <Badge className="bg-green-100 text-green-700">Connected</Badge>
+          </div>
         </div>
 
-        {/* Center Panel - Candidate Video (Smaller) */}
-        <div className="lg:col-span-3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="h-full"
-          >
-            <VideoPreview
-              isCameraOn={isCameraOn}
-              isRecording={mockInterviewInvitation.recordingEnabled}
-              showControls={true}
-              className="h-full min-h-[300px] max-h-[400px]"
-            />
-          </motion.div>
-        </div>
+        <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+          <div className="max-w-6xl w-full">
+            <motion.div
+              className="relative bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-2xl shadow-2xl overflow-hidden mb-6"
+              style={{ height: '500px' }}
+            >
+              {/* Swap Button - Top Center */}
+              <button
+                onClick={() => setIsSwapped(!isSwapped)}
+                className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/95 hover:bg-white backdrop-blur-sm rounded-full px-4 py-2 flex items-center gap-2 shadow-lg border border-gray-300 transition-all hover:scale-105"
+                title="Swap AI and Camera views"
+              >
+                <ArrowLeftRight className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-gray-900">
+                  {isSwapped ? 'Show AI Large' : 'Show Camera Large'}
+                </span>
+              </button>
 
-        {/* Right Panel - Interview Information (Narrower) */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            {/* Stage Progress */}
-            <div className="bg-card rounded-lg p-4 border">
-              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                Interview Stages
-                <Badge variant="secondary" className="ml-auto text-xs">
-                  {currentStageIndex + 1} / {stages.length}
-                </Badge>
-              </h3>
+              <div className="absolute inset-0 flex items-center justify-center">
+                {/* LARGE VIEW - Changes based on isSwapped */}
+                {!isSwapped ? (
+                  /* AI Avatar Large */
+                  <>
+                    {aiState.status === 'speaking' && (
+                      <motion.div
+                        className="absolute inset-0 bg-white/30"
+                        animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    )}
 
-              <div className="space-y-2">
-                {stages.map((stage, index) => {
-                  const isCompleted = index < currentStageIndex
-                  const isCurrent = index === currentStageIndex
-                  const isUpcoming = index > currentStageIndex
+                    <div className="text-center text-gray-900 z-10">
+                      <div className="text-6xl mb-4">👩‍💼</div>
+                      <p className="text-lg font-semibold">AI Interviewer</p>
+                      <p className="text-sm text-gray-600">
+                        {aiState.status === 'speaking' && 'Speaking...'}
+                        {aiState.status === 'listening' && 'Listening...'}
+                        {aiState.status === 'thinking' && 'Thinking...'}
+                        {aiState.status === 'idle' && 'Ready'}
+                      </p>
+                    </div>
 
-                  return (
-                    <div
-                      key={index}
-                      className={`flex items-center gap-2 p-2 rounded-md transition-colors ${
-                        isCurrent
-                          ? 'bg-primary/10 border border-primary/20'
-                          : 'bg-muted/30'
-                      }`}
-                    >
-                      <div className="flex-shrink-0">
-                        {isCompleted ? (
-                          <CheckCircle2 className="h-4 w-4 text-success" />
-                        ) : isCurrent ? (
-                          <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                          </div>
-                        ) : (
-                          <Circle className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`text-xs font-medium truncate ${
-                            isCurrent
-                              ? 'text-primary'
-                              : isCompleted
-                              ? 'text-foreground'
-                              : 'text-muted-foreground'
-                          }`}
-                        >
-                          {stage.stage}
+                    {/* Question overlay - position based on camera position */}
+                    <div className={`absolute left-6 right-6 bg-white/70 backdrop-blur-sm rounded-xl p-4 shadow-lg ${
+                      cameraPosition.startsWith('bottom') ? 'top-6' : 'bottom-6'
+                    }`}>
+                      <p className="text-sm text-gray-600">Speaking:</p>
+                      <p className="text-base font-medium text-gray-900">
+                        {currentQuestion?.text || 'Loading...'}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  /* Camera Large */
+                  <>
+                    <div className="absolute inset-0">
+                      <VideoPreview
+                        isCameraOn={isCameraOn}
+                        isRecording={false}
+                        showControls={false}
+                        className="h-full w-full"
+                      />
+                      <div className="absolute bottom-6 left-6 bg-black/70 backdrop-blur-sm rounded-lg px-4 py-2">
+                        <p className="text-lg font-semibold text-white">
+                          {mockInterviewSession.candidateName}
                         </p>
                       </div>
-
-                      {isCurrent && (
-                        <ChevronRight className="h-3 w-3 text-primary animate-pulse" />
-                      )}
                     </div>
-                  )
-                })}
+
+                    {/* Question overlay for swapped mode - position based on AI avatar position */}
+                    <div className={`absolute left-6 right-6 bg-white/70 backdrop-blur-sm rounded-xl p-4 shadow-lg ${
+                      cameraPosition.startsWith('bottom') ? 'top-6' : 'bottom-6'
+                    }`}>
+                      <p className="text-sm text-gray-600">AI Interviewer is asking:</p>
+                      <p className="text-base font-medium text-gray-900">
+                        {currentQuestion?.text || 'Loading...'}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* SMALL CORNER BOX - Changes based on isSwapped */}
+                <motion.div
+                  drag
+                  dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                  dragElastic={0.1}
+                  className={`absolute w-80 h-52 rounded-lg overflow-hidden shadow-xl border-2 border-white ${
+                    cameraPosition === 'top-left' ? 'top-6 left-6' :
+                    cameraPosition === 'top-right' ? 'top-6 right-6' :
+                    cameraPosition === 'bottom-left' ? 'bottom-6 left-6' :
+                    'bottom-6 right-6'
+                  }`}
+                  initial={false}
+                  animate={{
+                    top: cameraPosition.startsWith('top') ? '1.5rem' : 'auto',
+                    bottom: cameraPosition.startsWith('bottom') ? '1.5rem' : 'auto',
+                    left: cameraPosition.endsWith('left') ? '1.5rem' : 'auto',
+                    right: cameraPosition.endsWith('right') ? '1.5rem' : 'auto',
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                >
+                  {!isSwapped ? (
+                    /* Camera in Corner */
+                    <>
+                      <VideoPreview
+                        isCameraOn={isCameraOn}
+                        isRecording={false}
+                        showControls={false}
+                        className="h-full w-full"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm rounded px-2 py-1">
+                        <p className="text-xs font-medium text-white">
+                          {mockInterviewSession.candidateName}
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    /* AI Avatar in Corner */
+                    <div className="h-full w-full bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 flex items-center justify-center">
+                      {aiState.status === 'speaking' && (
+                        <motion.div
+                          className="absolute inset-0 bg-white/30"
+                          animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      )}
+                      <div className="text-center z-10">
+                        <div className="text-3xl mb-2">👩‍💼</div>
+                        <p className="text-xs font-semibold text-gray-900">AI Interviewer</p>
+                        <p className="text-xs text-gray-600">
+                          {aiState.status === 'speaking' && 'Speaking'}
+                          {aiState.status === 'listening' && 'Listening'}
+                          {aiState.status === 'thinking' && 'Thinking'}
+                          {aiState.status === 'idle' && 'Ready'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Position Control Menu */}
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-1 flex flex-col gap-1">
+                    <button
+                      onClick={() => setCameraPosition('top-left')}
+                      className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${
+                        cameraPosition === 'top-left' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Move to top-left"
+                    >
+                      <ArrowUpLeft className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => setCameraPosition('top-right')}
+                      className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${
+                        cameraPosition === 'top-right' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Move to top-right"
+                    >
+                      <ArrowUpRight className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => setCameraPosition('bottom-left')}
+                      className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${
+                        cameraPosition === 'bottom-left' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Move to bottom-left"
+                    >
+                      <ArrowDownLeft className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => setCameraPosition('bottom-right')}
+                      className={`p-1.5 rounded hover:bg-gray-200 transition-colors ${
+                        cameraPosition === 'bottom-right' ? 'bg-blue-100 text-blue-600' : 'text-gray-600'
+                      }`}
+                      title="Move to bottom-right"
+                    >
+                      <ArrowDownRight className="h-3 w-3" />
+                    </button>
+                  </div>
+
+                  {/* Drag Handle */}
+                  <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-1.5 cursor-move">
+                    <Move className="h-3 w-3 text-gray-600" />
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            <div className="bg-white rounded-xl shadow-lg border p-4 flex items-center justify-between">
+              <div className="flex gap-3">
+                <Button onClick={toggleMicrophone} className="flex flex-col gap-1 h-auto py-3">
+                  {isMicrophoneOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
+                  <span className="text-xs">Mute</span>
+                </Button>
+                <Button onClick={toggleCamera} className="flex flex-col gap-1 h-auto py-3 bg-orange-500">
+                  {isCameraOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
+                  <span className="text-xs">Camera</span>
+                </Button>
+                <Button variant="ghost" className="flex flex-col gap-1 h-auto py-3">
+                  <Monitor className="h-5 w-5" />
+                  <span className="text-xs">Share</span>
+                </Button>
+                <Button variant="ghost" className="flex flex-col gap-1 h-auto py-3">
+                  <Settings className="h-5 w-5" />
+                  <span className="text-xs">Settings</span>
+                </Button>
+              </div>
+              <div className="flex items-center gap-4">
+                <p className="text-2xl font-bold font-mono">{formatTime(elapsedTime)}</p>
+                <Button variant="destructive" onClick={handleEndInterview} className="bg-red-500">
+                  Leave Interview
+                </Button>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
 
-      {/* Bottom Section - Transcript + Controls */}
-      <div className="border-t bg-card">
-        {/* Live Transcript */}
-        <div className="px-6 pt-4">
-          <TranscriptPanel
-            liveTranscript={liveTranscript}
-            isListening={aiState.status === 'listening'}
-          />
+      {/* Right Sidebar */}
+      <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="p-6 border-b">
+          <h3 className="text-sm font-semibold text-gray-900">Real-time transcript</h3>
         </div>
-
-        {/* Control Buttons */}
-        <div className="px-6 py-4 flex items-center justify-center gap-3">
-          <Button
-            variant={isMicrophoneOn ? 'default' : 'destructive'}
-            size="lg"
-            onClick={toggleMicrophone}
-            className="min-w-[120px]"
-          >
-            {isMicrophoneOn ? (
-              <>
-                <Mic className="h-5 w-5 mr-2" />
-                Mute
-              </>
-            ) : (
-              <>
-                <MicOff className="h-5 w-5 mr-2" />
-                Unmuted
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant={isCameraOn ? 'default' : 'secondary'}
-            size="lg"
-            onClick={toggleCamera}
-            className="min-w-[120px]"
-          >
-            {isCameraOn ? (
-              <>
-                <Video className="h-5 w-5 mr-2" />
-                Camera On
-              </>
-            ) : (
-              <>
-                <VideoOff className="h-5 w-5 mr-2" />
-                Camera Off
-              </>
-            )}
-          </Button>
-
-          <Button variant="ghost" size="lg">
-            <Settings className="h-5 w-5 mr-2" />
-            Settings
-          </Button>
-
-          <Button variant="ghost" size="lg">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            Help
-          </Button>
-
-          <div className="flex-1" />
-
-          <Button
-            variant="destructive"
-            size="lg"
-            onClick={handleEndInterview}
-            className="min-w-[140px]"
-          >
-            <Square className="h-5 w-5 mr-2" />
-            End Interview
-          </Button>
+        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <p className="text-xs font-semibold text-blue-900 mb-2">AI Speaking</p>
+            <p className="text-sm text-gray-700">{currentQuestion?.text || 'Loading...'}</p>
+          </div>
+          {liveTranscript && (
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <p className="text-xs font-semibold text-gray-700 mb-2">Your Response</p>
+              <p className="text-sm">{liveTranscript}</p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* End Interview Confirmation Dialog */}
       {showEndConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-card rounded-xl p-8 max-w-md w-full mx-4 border-2 border-destructive/20"
-          >
-            <h3 className="text-2xl font-bold text-foreground mb-4">
-              End Interview?
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Are you sure you want to end this interview? Your responses so far
-              will be submitted.
-            </p>
-
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md shadow-2xl">
+            <h3 className="text-2xl font-bold mb-4">Leave Interview?</h3>
+            <p className="text-gray-600 mb-6">Your responses will be submitted.</p>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowEndConfirm(false)}
-                className="flex-1"
-              >
+              <Button variant="outline" onClick={() => setShowEndConfirm(false)} className="flex-1">
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmEndInterview}
-                className="flex-1"
-              >
-                End Interview
+              <Button variant="destructive" onClick={confirmEndInterview} className="flex-1 bg-red-500">
+                Leave
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>
