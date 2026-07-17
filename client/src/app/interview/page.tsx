@@ -13,7 +13,7 @@ import { TranscriptPanel } from '@/components/interview/transcript-panel'
 import { useInterviewStore } from '@/store/interview-store'
 import { useSettingsStore } from '@/store/settings-store'
 import { mockInterviewInvitation, sampleQuestions } from '@/lib/mock-data'
-import { formatTime, generateId } from '@/lib/utils'
+import { formatTime, generateId, cn } from '@/lib/utils'
 import {
   Mic,
   MicOff,
@@ -54,6 +54,7 @@ export default function InterviewPage() {
   const [currentStageIndex, setCurrentStageIndex] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
+  const [avatarPosition, setAvatarPosition] = useState({ x: 0, y: 0 }) // Starting position at top-left corner (no padding)
 
   // Simulate interview flow
   useEffect(() => {
@@ -198,6 +199,10 @@ export default function InterviewPage() {
   const currentStage = stages[currentStageIndex]
   const estimatedEndTime = new Date(Date.now() + 3600000) // 1 hour from now
 
+  // Determine if text overlay should be at top or bottom based on avatar position
+  const isAvatarInBottomHalf = avatarPosition.y > 182 // Half of 364px video height
+  const textOverlayPosition = isAvatarInBottomHalf ? 'top' : 'bottom'
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Top Navigation Bar */}
@@ -257,47 +262,75 @@ export default function InterviewPage() {
         </div>
       </div>
 
-      {/* Main Content - 3 Column Layout */}
+      {/* Main Content - 2 Column Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-hidden">
-        {/* Left Panel - AI Interviewer + Question */}
-        <div className="lg:col-span-6 flex flex-col gap-6">
-          {/* AI Avatar */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <AIAvatar state={aiState} className="mb-6" />
-          </motion.div>
-
-          {/* Current Question */}
-          <AnimatePresence mode="wait">
-            <QuestionDisplay
-              key={currentQuestion?.id}
-              question={currentQuestion}
-              className="flex-1"
-            />
-          </AnimatePresence>
-        </div>
-
-        {/* Center Panel - Candidate Video (Smaller) */}
-        <div className="lg:col-span-3">
+        {/* Left Panel - Video with Overlays */}
+        <div className="lg:col-span-9 relative flex items-start justify-start">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="h-full"
+            transition={{ duration: 0.5 }}
+            className="relative"
+            style={{ width: '580px', height: '364px' }}
           >
+            {/* Video Preview - Fixed Size */}
             <VideoPreview
               isCameraOn={isCameraOn}
               isRecording={mockInterviewInvitation.recordingEnabled}
               showControls={true}
-              className="h-full min-h-[300px] max-h-[400px]"
+              className="w-full h-full"
             />
+
+            {/* AI Avatar Overlay - Draggable */}
+            <motion.div
+              drag
+              dragMomentum={false}
+              dragElastic={0}
+              dragConstraints={{
+                left: 0,
+                right: 440, // 580px video width - 140px avatar width (no padding)
+                top: 0,
+                bottom: 259, // 364px video height - 105px avatar height (no padding)
+              }}
+              style={{ 
+                position: 'absolute',
+                left: 0,
+                top: 0,
+                x: avatarPosition.x,
+                y: avatarPosition.y
+              }}
+              onDragEnd={(event, info) => {
+                setAvatarPosition({ 
+                  x: info.offset.x + avatarPosition.x, 
+                  y: info.offset.y + avatarPosition.y 
+                })
+              }}
+              className="z-10 cursor-move"
+              whileHover={{ scale: 1.02 }}
+              whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+            >
+              <AIAvatar state={aiState} compact={true} />
+            </motion.div>
+
+            {/* Question Display Overlay - Dynamic Position */}
+            <div className={cn(
+              'absolute left-0 right-0 z-10',
+              textOverlayPosition === 'top' ? 'top-0' : 'bottom-0'
+            )}>
+              <AnimatePresence mode="wait">
+                <QuestionDisplay
+                  key={currentQuestion?.id}
+                  question={currentQuestion}
+                  aiState={aiState}
+                  liveTranscript={liveTranscript}
+                  position={textOverlayPosition}
+                />
+              </AnimatePresence>
+            </div>
           </motion.div>
         </div>
 
-        {/* Right Panel - Interview Information (Narrower) */}
+        {/* Right Panel - Interview Information */}
         <div className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
