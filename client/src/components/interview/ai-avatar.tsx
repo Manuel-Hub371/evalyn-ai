@@ -62,7 +62,7 @@ export function AIAvatar({ state, className, compact = false }: AIAvatarProps) {
     return (
       <motion.div
         className={cn(
-          'relative overflow-hidden rounded-lg shadow-2xl border-2',
+          'relative overflow-hidden rounded-lg shadow-2xl border-2 w-full h-full',
           getBorderColor(),
           className
         )}
@@ -79,7 +79,6 @@ export function AIAvatar({ state, className, compact = false }: AIAvatarProps) {
             ease: 'easeInOut',
           }
         }}
-        style={{ width: '140px', height: '105px' }}
       >
         {/* Video call style background with avatar */}
         <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 flex items-center justify-center relative">

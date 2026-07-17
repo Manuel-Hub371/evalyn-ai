@@ -29,6 +29,7 @@ import {
   CheckCircle2,
   Circle,
   Lightbulb,
+  MessageSquare,
 } from 'lucide-react'
 
 export default function InterviewPage() {
@@ -55,6 +56,7 @@ export default function InterviewPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [avatarPosition, setAvatarPosition] = useState({ x: 0, y: 0 }) // Starting position at top-left corner (no padding)
+  const [isSwapped, setIsSwapped] = useState(false) // Track if views are swapped
 
   // Simulate interview flow
   useEffect(() => {
@@ -203,6 +205,11 @@ export default function InterviewPage() {
   const isAvatarInBottomHalf = avatarPosition.y > 182 // Half of 364px video height
   const textOverlayPosition = isAvatarInBottomHalf ? 'top' : 'bottom'
 
+  // Handle double-click to swap views
+  const handleSwapViews = () => {
+    setIsSwapped(!isSwapped)
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Top Navigation Bar */}
@@ -273,44 +280,146 @@ export default function InterviewPage() {
             className="relative"
             style={{ width: '580px', height: '364px' }}
           >
-            {/* Video Preview - Fixed Size */}
-            <VideoPreview
-              isCameraOn={isCameraOn}
-              isRecording={mockInterviewInvitation.recordingEnabled}
-              showControls={true}
-              className="w-full h-full"
-            />
+            {!isSwapped ? (
+              <>
+                {/* Main View - Video Preview */}
+                <div 
+                  className="w-full h-full"
+                  onDoubleClick={handleSwapViews}
+                >
+                  <VideoPreview
+                    isCameraOn={isCameraOn}
+                    isRecording={mockInterviewInvitation.recordingEnabled}
+                    showControls={true}
+                    className="w-full h-full cursor-pointer"
+                  />
+                </div>
 
-            {/* AI Avatar Overlay - Draggable */}
-            <motion.div
-              drag
-              dragMomentum={false}
-              dragElastic={0}
-              dragConstraints={{
-                left: 0,
-                right: 440, // 580px video width - 140px avatar width (no padding)
-                top: 0,
-                bottom: 259, // 364px video height - 105px avatar height (no padding)
-              }}
-              style={{ 
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                x: avatarPosition.x,
-                y: avatarPosition.y
-              }}
-              onDragEnd={(event, info) => {
-                setAvatarPosition({ 
-                  x: info.offset.x + avatarPosition.x, 
-                  y: info.offset.y + avatarPosition.y 
-                })
-              }}
-              className="z-10 cursor-move"
-              whileHover={{ scale: 1.02 }}
-              whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
-            >
-              <AIAvatar state={aiState} compact={true} />
-            </motion.div>
+                {/* Small Overlay - AI Avatar (Draggable) */}
+                <motion.div
+                  drag
+                  dragMomentum={false}
+                  dragElastic={0}
+                  dragConstraints={{
+                    left: 0,
+                    right: 380, // 580px video width - 200px avatar width
+                    top: 0,
+                    bottom: 214, // 364px video height - 150px avatar height
+                  }}
+                  style={{ 
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    x: avatarPosition.x,
+                    y: avatarPosition.y
+                  }}
+                  onDragEnd={(event, info) => {
+                    setAvatarPosition({ 
+                      x: info.offset.x + avatarPosition.x, 
+                      y: info.offset.y + avatarPosition.y 
+                    })
+                  }}
+                  onDoubleClick={handleSwapViews}
+                  className="z-10 cursor-move"
+                  whileHover={{ scale: 1.02 }}
+                  whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+                >
+                  <div style={{ width: '200px', height: '150px' }}>
+                    <AIAvatar state={aiState} compact={true} />
+                  </div>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                {/* Main View - AI Avatar (Large) */}
+                <div 
+                  className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-lg"
+                  onDoubleClick={handleSwapViews}
+                >
+                  <div className="relative w-full h-full flex items-center justify-center cursor-pointer">
+                    {/* Large AI Avatar Icon */}
+                    <svg
+                      className="w-48 h-48 text-white/90"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                    </svg>
+                    
+                    {/* Name badge at bottom */}
+                    <div className="absolute bottom-4 left-4 right-4 bg-black/70 backdrop-blur-sm px-4 py-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xl font-medium text-white">Eva - AI Interviewer</span>
+                        {aiState.status === 'listening' && (
+                          <motion.div
+                            animate={{ opacity: [0.5, 1, 0.5] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            <Mic className="w-5 h-5 text-green-400" />
+                          </motion.div>
+                        )}
+                        {aiState.status === 'speaking' && (
+                          <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 0.8, repeat: Infinity }}
+                          >
+                            <MessageSquare className="w-5 h-5 text-primary" />
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Status indicator */}
+                    <div className={cn(
+                      'absolute top-4 right-4 w-4 h-4 rounded-full border-2 border-white shadow-lg',
+                      aiState.status === 'speaking' ? 'bg-primary' :
+                      aiState.status === 'listening' ? 'bg-green-500' :
+                      aiState.status === 'thinking' || aiState.status === 'processing' ? 'bg-yellow-500' :
+                      'bg-gray-500'
+                    )} />
+                  </div>
+                </div>
+
+                {/* Small Overlay - Video (Draggable) */}
+                <motion.div
+                  drag
+                  dragMomentum={false}
+                  dragElastic={0}
+                  dragConstraints={{
+                    left: 0,
+                    right: 380, // 580px video width - 200px box width
+                    top: 0,
+                    bottom: 214, // 364px video height - 150px box height
+                  }}
+                  style={{ 
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    x: avatarPosition.x,
+                    y: avatarPosition.y,
+                    width: '200px',
+                    height: '150px'
+                  }}
+                  onDragEnd={(event, info) => {
+                    setAvatarPosition({ 
+                      x: info.offset.x + avatarPosition.x, 
+                      y: info.offset.y + avatarPosition.y 
+                    })
+                  }}
+                  onDoubleClick={handleSwapViews}
+                  className="z-10 cursor-move overflow-hidden rounded-lg border-2 border-white/20 shadow-2xl"
+                  whileHover={{ scale: 1.02 }}
+                  whileDrag={{ scale: 1.05, cursor: 'grabbing' }}
+                >
+                  <VideoPreview
+                    isCameraOn={isCameraOn}
+                    isRecording={mockInterviewInvitation.recordingEnabled}
+                    showControls={false}
+                    className="w-full h-full"
+                  />
+                </motion.div>
+              </>
+            )}
 
             {/* Question Display Overlay - Dynamic Position */}
             <div className={cn(

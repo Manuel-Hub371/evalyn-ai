@@ -67,19 +67,6 @@ export function VideoPreview({
             muted
             className="w-full h-full object-cover"
           />
-          
-          {/* Status indicators overlay */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2">
-            <StatusIndicator status="connected" label="Camera On" size="sm" />
-            {isRecording && (
-              <StatusIndicator
-                status="error"
-                label="Recording"
-                size="sm"
-                className="animate-pulse"
-              />
-            )}
-          </div>
 
           {/* Fullscreen button */}
           {showControls && onFullscreen && (
