@@ -28,6 +28,7 @@ import {
   ChevronRight,
   CheckCircle2,
   Circle,
+  Lightbulb,
 } from 'lucide-react'
 
 export default function InterviewPage() {
@@ -297,11 +298,12 @@ export default function InterviewPage() {
         </div>
 
         {/* Right Panel - Interview Information (Narrower) */}
-        <div className="lg:col-span-3 flex flex-col gap-6">
+        <div className="lg:col-span-3 flex flex-col gap-6 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
+            className="space-y-4"
           >
             {/* Stage Progress */}
             <div className="bg-card rounded-lg p-4 border">
@@ -359,6 +361,61 @@ export default function InterviewPage() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+
+            {/* Interview Tips */}
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-primary" />
+                Interview Tips
+              </h3>
+
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Take a moment to think before answering. Pauses show thoughtfulness.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Use specific examples from your experience to illustrate your points.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Maintain eye contact with the camera for a natural connection.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Speak clearly and at a moderate pace. The AI is listening carefully.
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    If you need clarification, don't hesitate to ask for the question to be repeated.
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>
