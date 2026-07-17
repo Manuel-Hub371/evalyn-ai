@@ -284,13 +284,15 @@ export default function InterviewPage() {
                     </div>
 
                     {/* Question overlay - position based on camera position */}
-                    <div className={`absolute left-6 right-6 bg-white/70 backdrop-blur-sm rounded-xl p-4 shadow-lg ${
-                      cameraPosition.startsWith('bottom') ? 'top-6' : 'bottom-6'
+                    <div className={`absolute left-0 right-0 bg-black/60 backdrop-blur-sm ${
+                      cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
                     }`}>
-                      <p className="text-sm text-gray-600">Speaking:</p>
-                      <p className="text-base font-medium text-gray-900">
-                        {currentQuestion?.text || 'Loading...'}
-                      </p>
+                      <div className="px-12 py-6">
+                        <p className="text-sm text-white/70 m-0 p-0 leading-tight">Speaking:</p>
+                        <p className="text-base font-medium text-white m-0 p-0 leading-snug">
+                          {currentQuestion?.text || 'Loading...'}
+                        </p>
+                      </div>
                     </div>
                   </>
                 ) : (
@@ -311,13 +313,15 @@ export default function InterviewPage() {
                     </div>
 
                     {/* Question overlay for swapped mode - position based on AI avatar position */}
-                    <div className={`absolute left-6 right-6 bg-white/70 backdrop-blur-sm rounded-xl p-4 shadow-lg ${
-                      cameraPosition.startsWith('bottom') ? 'top-6' : 'bottom-6'
+                    <div className={`absolute left-0 right-0 bg-black/60 backdrop-blur-sm ${
+                      cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
                     }`}>
-                      <p className="text-sm text-gray-600">AI Interviewer is asking:</p>
-                      <p className="text-base font-medium text-gray-900">
-                        {currentQuestion?.text || 'Loading...'}
-                      </p>
+                      <div className="px-12 py-6">
+                        <p className="text-sm text-white/70 m-0 p-0 leading-tight">AI Interviewer is asking:</p>
+                        <p className="text-base font-medium text-white m-0 p-0 leading-snug">
+                          {currentQuestion?.text || 'Loading...'}
+                        </p>
+                      </div>
                     </div>
                   </>
                 )}
@@ -328,17 +332,17 @@ export default function InterviewPage() {
                   dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                   dragElastic={0.1}
                   className={`absolute w-80 h-52 rounded-lg overflow-hidden shadow-xl border-2 border-white ${
-                    cameraPosition === 'top-left' ? 'top-6 left-6' :
-                    cameraPosition === 'top-right' ? 'top-6 right-6' :
-                    cameraPosition === 'bottom-left' ? 'bottom-6 left-6' :
-                    'bottom-6 right-6'
+                    cameraPosition === 'top-left' ? 'top-0 left-0' :
+                    cameraPosition === 'top-right' ? 'top-0 right-0' :
+                    cameraPosition === 'bottom-left' ? 'bottom-0 left-0' :
+                    'bottom-0 right-0'
                   }`}
                   initial={false}
                   animate={{
-                    top: cameraPosition.startsWith('top') ? '1.5rem' : 'auto',
-                    bottom: cameraPosition.startsWith('bottom') ? '1.5rem' : 'auto',
-                    left: cameraPosition.endsWith('left') ? '1.5rem' : 'auto',
-                    right: cameraPosition.endsWith('right') ? '1.5rem' : 'auto',
+                    top: cameraPosition.startsWith('top') ? '0' : 'auto',
+                    bottom: cameraPosition.startsWith('bottom') ? '0' : 'auto',
+                    left: cameraPosition.endsWith('left') ? '0' : 'auto',
+                    right: cameraPosition.endsWith('right') ? '0' : 'auto',
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 >
