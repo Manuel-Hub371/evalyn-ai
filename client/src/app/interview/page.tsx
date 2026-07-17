@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { VideoPreview } from '@/components/interview/video-preview'
 import { useInterviewStore } from '@/store/interview-store'
+import { useThemeStore } from '@/store/theme-store'
 import { mockInterviewInvitation, mockInterviewSession, sampleQuestions } from '@/lib/mock-data'
 import { formatTime, generateId } from '@/lib/utils'
 import {
@@ -23,10 +24,18 @@ import {
   ArrowDownLeft,
   ArrowDownRight,
   ArrowLeftRight,
+  CheckCircle2,
+  Circle,
+  Loader,
+  Moon,
+  Sun,
 } from 'lucide-react'
 
 export default function InterviewPage() {
   const router = useRouter()
+  const { theme, setTheme, getEffectiveTheme } = useThemeStore()
+  const isDark = getEffectiveTheme() === 'dark'
+  
   const {
     currentQuestion,
     setCurrentQuestion,
@@ -48,6 +57,10 @@ export default function InterviewPage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [cameraPosition, setCameraPosition] = useState<'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'>('bottom-right')
   const [isSwapped, setIsSwapped] = useState(false) // false = AI large, true = Camera large
+
+  const toggleTheme = () => {
+    setTheme(isDark ? 'light' : 'dark')
+  }
 
   useEffect(() => {
     if (!currentQuestion) {
@@ -170,32 +183,42 @@ export default function InterviewPage() {
   const stages = sampleQuestions
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className={`min-h-screen flex ${isDark ? 'bg-[#0B1120]' : 'bg-gray-50'}`}>
       {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
+      <div className={`w-80 border-r flex flex-col ${
+        isDark 
+          ? 'bg-[#111827] border-[#374151]' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <div className={`p-6 border-b ${isDark ? 'border-[#374151]' : 'border-gray-200'}`}>
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
               <Building2 className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-gray-900">
+              <h2 className={`text-sm font-semibold ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
                 {mockInterviewInvitation.companyName}
               </h2>
-              <p className="text-xs text-gray-500">Interview Platform</p>
+              <p className={`text-xs ${isDark ? 'text-[#9CA3AF]' : 'text-gray-500'}`}>
+                Interview Platform
+              </p>
             </div>
           </div>
 
           <div className="space-y-3">
             <div>
-              <p className="text-xs text-gray-500 mb-1">Candidate:</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className={`text-xs mb-1 ${isDark ? 'text-[#9CA3AF]' : 'text-gray-500'}`}>
+                Candidate:
+              </p>
+              <p className={`text-sm font-semibold ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
                 {mockInterviewSession.candidateName}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-1">Job Title:</p>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className={`text-xs mb-1 ${isDark ? 'text-[#9CA3AF]' : 'text-gray-500'}`}>
+                Job Title:
+              </p>
+              <p className={`text-sm font-semibold ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
                 {mockInterviewInvitation.jobPosition}
               </p>
             </div>
@@ -203,27 +226,113 @@ export default function InterviewPage() {
         </div>
 
         <div className="flex-1 p-6 overflow-y-auto">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">Interview Topics</h3>
-          <div className="space-y-2">
+          <h3 className={`text-sm font-semibold mb-4 ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
+            Interview Topics
+          </h3>
+          <div className="space-y-3">
             {stages.map((stage, index) => {
               const isCompleted = index < currentStageIndex
               const isCurrent = index === currentStageIndex
+              const isPending = index > currentStageIndex
 
               return (
-                <div
+                <motion.div
                   key={index}
-                  className={`p-3 rounded-lg border ${
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`relative p-4 rounded-lg border-2 transition-all duration-300 ${
                     isCurrent
-                      ? 'bg-blue-50 border-blue-200'
+                      ? isDark 
+                        ? 'bg-[#1F2937] border-[#6366F1] shadow-md' 
+                        : 'bg-blue-50 border-blue-400 shadow-md'
                       : isCompleted
-                      ? 'bg-green-50 border-green-200'
-                      : 'bg-white border-gray-200'
+                      ? isDark
+                        ? 'bg-[#1F2937] border-green-500/50'
+                        : 'bg-green-50 border-green-300'
+                      : isDark
+                      ? 'bg-[#1F2937] border-[#374151]'
+                      : 'bg-gray-50 border-gray-200'
                   }`}
                 >
-                  <span className={`text-sm font-medium ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-green-900' : 'text-gray-600'}`}>
-                    {stage.stage}
-                  </span>
-                </div>
+                  <div className="flex items-start gap-3">
+                    {/* Status Icon */}
+                    <div className="flex-shrink-0 mt-0.5">
+                      {isCompleted && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 300 }}
+                        >
+                          <CheckCircle2 className="h-5 w-5 text-green-600" />
+                        </motion.div>
+                      )}
+                      {isCurrent && (
+                        <motion.div
+                          animate={{ 
+                            scale: [1, 1.2, 1],
+                            rotate: [0, 180, 360]
+                          }}
+                          transition={{ 
+                            duration: 2, 
+                            repeat: Infinity,
+                            ease: "linear"
+                          }}
+                        >
+                          <Loader className="h-5 w-5 text-blue-600" />
+                        </motion.div>
+                      )}
+                      {isPending && (
+                        <Circle className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+
+                    {/* Stage Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${
+                        isCurrent 
+                          ? isDark ? 'text-[#6366F1]' : 'text-blue-900'
+                          : isCompleted 
+                          ? 'text-green-900' 
+                          : isDark ? 'text-[#9CA3AF]' : 'text-gray-500'
+                      }`}>
+                        {stage.stage}
+                      </p>
+                      
+                      {/* Status Badge */}
+                      <div className="mt-1.5">
+                        {isCompleted && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            Completed
+                          </span>
+                        )}
+                        {isCurrent && (
+                          <motion.span
+                            animate={{ opacity: [1, 0.6, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700"
+                          >
+                            Active Now
+                          </motion.span>
+                        )}
+                        {isPending && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Indicator Bar */}
+                  {isCurrent && (
+                    <motion.div
+                      className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-l-lg"
+                      animate={{ opacity: [1, 0.5, 1] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    />
+                  )}
+                </motion.div>
               )
             })}
           </div>
@@ -232,16 +341,36 @@ export default function InterviewPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <h1 className="text-lg font-semibold text-gray-900">
+        <div className={`h-16 border-b flex items-center justify-between px-6 ${
+          isDark 
+            ? 'bg-[#111827] border-[#374151]' 
+            : 'bg-white border-gray-200'
+        }`}>
+          <h1 className={`text-lg font-semibold ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
             {mockInterviewInvitation.companyName} Interview
           </h1>
           <div className="flex items-center gap-4">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark 
+                  ? 'bg-[#1F2937] hover:bg-[#374151] text-[#F9FAFB]' 
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-900'
+              }`}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </button>
             <Badge className="bg-green-100 text-green-700">Connected</Badge>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-blue-50">
+        <div className={`flex-1 flex items-center justify-center p-8 ${
+          isDark 
+            ? 'bg-gradient-to-br from-[#0B1120] to-[#1F2937]' 
+            : 'bg-gradient-to-br from-gray-50 to-blue-50'
+        }`}>
           <div className="max-w-6xl w-full">
             <motion.div
               className="relative bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 rounded-2xl shadow-2xl overflow-hidden mb-6"
@@ -284,16 +413,105 @@ export default function InterviewPage() {
                     </div>
 
                     {/* Question overlay - position based on camera position */}
-                    <div className={`absolute left-0 right-0 bg-black/60 backdrop-blur-sm ${
-                      cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
-                    }`}>
-                      <div className="px-12 py-6">
-                        <p className="text-sm text-white/70 m-0 p-0 leading-tight">Speaking:</p>
-                        <p className="text-base font-medium text-white m-0 p-0 leading-snug">
-                          {currentQuestion?.text || 'Loading...'}
-                        </p>
-                      </div>
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={liveTranscript ? 'user-speaking' : aiState.status}
+                        initial={{ opacity: 0, y: cameraPosition.startsWith('bottom') ? -20 : 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: cameraPosition.startsWith('bottom') ? -20 : 20 }}
+                        transition={{ duration: 0.3 }}
+                        className={`absolute left-0 right-0 bg-black/70 backdrop-blur-md ${
+                          cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
+                        }`}
+                      >
+                        <div className="px-12 py-6">
+                          {/* Status Header with Waveform Animation */}
+                          <div className="flex items-center gap-3 mb-3">
+                            {/* Waveform Visualization */}
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(8)].map((_, i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{ 
+                                    height: (liveTranscript || aiState.status !== 'idle') ? [4, 16, 4] : [4],
+                                    opacity: (liveTranscript || aiState.status !== 'idle') ? [0.3, 1, 0.3] : [0.3]
+                                  }}
+                                  transition={{ 
+                                    duration: liveTranscript ? 0.6 : (aiState.status === 'thinking' ? 1.2 : 0.8), 
+                                    repeat: Infinity,
+                                    delay: i * 0.1,
+                                    ease: "easeInOut"
+                                  }}
+                                  className={`w-0.5 rounded-full ${
+                                    liveTranscript ? 'bg-green-400' :
+                                    aiState.status === 'speaking' ? 'bg-blue-400' :
+                                    aiState.status === 'listening' ? 'bg-green-400' :
+                                    aiState.status === 'thinking' ? 'bg-purple-400' :
+                                    'bg-gray-400'
+                                  }`}
+                                  style={{ height: '4px' }}
+                                />
+                              ))}
+                            </div>
+
+                            {/* Status Label */}
+                            <motion.p
+                              animate={{ opacity: [1, 0.6, 1] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                              className={`text-xs font-semibold uppercase tracking-wider ${
+                                liveTranscript ? 'text-green-400' :
+                                aiState.status === 'speaking' ? 'text-blue-400' :
+                                aiState.status === 'listening' ? 'text-green-400' :
+                                aiState.status === 'thinking' ? 'text-purple-400' :
+                                'text-gray-400'
+                              }`}
+                            >
+                              {liveTranscript ? 'You Speaking' :
+                               aiState.status === 'speaking' ? 'AI Speaking' :
+                               aiState.status === 'listening' ? 'Listening' :
+                               aiState.status === 'thinking' ? 'Analyzing' :
+                               'Ready'}
+                            </motion.p>
+                          </div>
+
+                          {/* Text Content - Shows user transcript or AI question */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="relative"
+                          >
+                            <p className="text-base font-medium text-white m-0 p-0 leading-snug">
+                              {liveTranscript || currentQuestion?.text || 'Loading...'}
+                            </p>
+                            {/* Typing cursor when user is speaking */}
+                            {liveTranscript && (
+                              <motion.span
+                                animate={{ opacity: [1, 0, 1] }}
+                                transition={{ duration: 0.8, repeat: Infinity }}
+                                className="inline-block w-0.5 h-4 bg-green-400 ml-1 align-middle"
+                              />
+                            )}
+                          </motion.div>
+                        </div>
+
+                        {/* Animated bottom border based on status */}
+                        <motion.div
+                          className={`h-1 ${
+                            liveTranscript ? 'bg-green-400' :
+                            aiState.status === 'speaking' ? 'bg-blue-400' :
+                            aiState.status === 'listening' ? 'bg-green-400' :
+                            aiState.status === 'thinking' ? 'bg-purple-400' :
+                            'bg-gray-400'
+                          }`}
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scaleX: [0.9, 1, 0.9]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
                   </>
                 ) : (
                   /* Camera Large */
@@ -313,16 +531,105 @@ export default function InterviewPage() {
                     </div>
 
                     {/* Question overlay for swapped mode - position based on AI avatar position */}
-                    <div className={`absolute left-0 right-0 bg-black/60 backdrop-blur-sm ${
-                      cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
-                    }`}>
-                      <div className="px-12 py-6">
-                        <p className="text-sm text-white/70 m-0 p-0 leading-tight">AI Interviewer is asking:</p>
-                        <p className="text-base font-medium text-white m-0 p-0 leading-snug">
-                          {currentQuestion?.text || 'Loading...'}
-                        </p>
-                      </div>
-                    </div>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={liveTranscript ? 'user-speaking' : aiState.status}
+                        initial={{ opacity: 0, y: cameraPosition.startsWith('bottom') ? -20 : 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: cameraPosition.startsWith('bottom') ? -20 : 20 }}
+                        transition={{ duration: 0.3 }}
+                        className={`absolute left-0 right-0 bg-black/70 backdrop-blur-md ${
+                          cameraPosition.startsWith('bottom') ? 'top-0' : 'bottom-0'
+                        }`}
+                      >
+                        <div className="px-12 py-6">
+                          {/* Status Header with Waveform Animation */}
+                          <div className="flex items-center gap-3 mb-3">
+                            {/* Waveform Visualization */}
+                            <div className="flex items-center gap-0.5">
+                              {[...Array(8)].map((_, i) => (
+                                <motion.div
+                                  key={i}
+                                  animate={{ 
+                                    height: (liveTranscript || aiState.status !== 'idle') ? [4, 16, 4] : [4],
+                                    opacity: (liveTranscript || aiState.status !== 'idle') ? [0.3, 1, 0.3] : [0.3]
+                                  }}
+                                  transition={{ 
+                                    duration: liveTranscript ? 0.6 : (aiState.status === 'thinking' ? 1.2 : 0.8), 
+                                    repeat: Infinity,
+                                    delay: i * 0.1,
+                                    ease: "easeInOut"
+                                  }}
+                                  className={`w-0.5 rounded-full ${
+                                    liveTranscript ? 'bg-green-400' :
+                                    aiState.status === 'speaking' ? 'bg-blue-400' :
+                                    aiState.status === 'listening' ? 'bg-green-400' :
+                                    aiState.status === 'thinking' ? 'bg-purple-400' :
+                                    'bg-gray-400'
+                                  }`}
+                                  style={{ height: '4px' }}
+                                />
+                              ))}
+                            </div>
+
+                            {/* Status Label */}
+                            <motion.p
+                              animate={{ opacity: [1, 0.6, 1] }}
+                              transition={{ duration: 1.5, repeat: Infinity }}
+                              className={`text-xs font-semibold uppercase tracking-wider ${
+                                liveTranscript ? 'text-green-400' :
+                                aiState.status === 'speaking' ? 'text-blue-400' :
+                                aiState.status === 'listening' ? 'text-green-400' :
+                                aiState.status === 'thinking' ? 'text-purple-400' :
+                                'text-gray-400'
+                              }`}
+                            >
+                              {liveTranscript ? 'You Speaking' :
+                               aiState.status === 'speaking' ? 'AI Speaking' :
+                               aiState.status === 'listening' ? 'Listening' :
+                               aiState.status === 'thinking' ? 'Analyzing' :
+                               'Ready'}
+                            </motion.p>
+                          </div>
+
+                          {/* Text Content - Shows user transcript or AI question */}
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                            className="relative"
+                          >
+                            <p className="text-base font-medium text-white m-0 p-0 leading-snug">
+                              {liveTranscript || currentQuestion?.text || 'Loading...'}
+                            </p>
+                            {/* Typing cursor when user is speaking */}
+                            {liveTranscript && (
+                              <motion.span
+                                animate={{ opacity: [1, 0, 1] }}
+                                transition={{ duration: 0.8, repeat: Infinity }}
+                                className="inline-block w-0.5 h-4 bg-green-400 ml-1 align-middle"
+                              />
+                            )}
+                          </motion.div>
+                        </div>
+
+                        {/* Animated bottom border based on status */}
+                        <motion.div
+                          className={`h-1 ${
+                            liveTranscript ? 'bg-green-400' :
+                            aiState.status === 'speaking' ? 'bg-blue-400' :
+                            aiState.status === 'listening' ? 'bg-green-400' :
+                            aiState.status === 'thinking' ? 'bg-purple-400' :
+                            'bg-gray-400'
+                          }`}
+                          animate={{ 
+                            opacity: [0.5, 1, 0.5],
+                            scaleX: [0.9, 1, 0.9]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
                   </>
                 )}
 
@@ -432,7 +739,11 @@ export default function InterviewPage() {
               </div>
             </motion.div>
 
-            <div className="bg-white rounded-xl shadow-lg border p-4 flex items-center justify-between">
+            <div className={`rounded-xl shadow-lg border p-4 flex items-center justify-between ${
+              isDark 
+                ? 'bg-[#111827] border-[#374151]' 
+                : 'bg-white border-gray-200'
+            }`}>
               <div className="flex gap-3">
                 <Button onClick={toggleMicrophone} className="flex flex-col gap-1 h-auto py-3">
                   {isMicrophoneOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
@@ -463,29 +774,286 @@ export default function InterviewPage() {
       </div>
 
       {/* Right Sidebar */}
-      <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
-        <div className="p-6 border-b">
-          <h3 className="text-sm font-semibold text-gray-900">Real-time transcript</h3>
-        </div>
-        <div className="flex-1 p-6 overflow-y-auto space-y-4">
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <p className="text-xs font-semibold text-blue-900 mb-2">AI Speaking</p>
-            <p className="text-sm text-gray-700">{currentQuestion?.text || 'Loading...'}</p>
+      <div className={`w-80 border-l flex flex-col ${
+        isDark 
+          ? 'bg-[#111827] border-[#374151]' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <div className={`p-6 border-b ${isDark ? 'border-[#374151]' : 'border-gray-200'}`}>
+          <div className="flex items-center justify-between">
+            <h3 className={`text-sm font-semibold ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
+              Live Transcript
+            </h3>
+            {(aiState.status === 'speaking' || liveTranscript) && (
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="flex items-center gap-1"
+              >
+                <div className="flex gap-0.5">
+                  <motion.div
+                    animate={{ height: [8, 16, 8] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: 0 }}
+                    className="w-1 bg-red-500 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ height: [8, 20, 8] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
+                    className="w-1 bg-red-500 rounded-full"
+                  />
+                  <motion.div
+                    animate={{ height: [8, 14, 8] }}
+                    transition={{ duration: 0.5, repeat: Infinity, delay: 0.2 }}
+                    className="w-1 bg-red-500 rounded-full"
+                  />
+                </div>
+                <span className="text-xs font-medium text-red-600">LIVE</span>
+              </motion.div>
+            )}
           </div>
-          {liveTranscript && (
-            <div className="bg-gray-50 rounded-lg p-4 border">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Your Response</p>
-              <p className="text-sm">{liveTranscript}</p>
-            </div>
+        </div>
+        
+        <div className="flex-1 p-6 overflow-y-auto space-y-4">
+          {/* AI Speaking Transcript */}
+          <AnimatePresence mode="wait">
+            {aiState.status === 'speaking' && currentQuestion && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="relative"
+              >
+                <motion.div
+                  className={`rounded-xl p-4 border-2 shadow-lg ${
+                    isDark
+                      ? 'bg-gradient-to-br from-[#1F2937] to-[#111827] border-blue-500'
+                      : 'bg-gradient-to-br from-blue-50 to-blue-100 border-blue-300'
+                  }`}
+                  animate={{ 
+                    boxShadow: [
+                      '0 4px 6px -1px rgba(59, 130, 246, 0.3)',
+                      '0 10px 15px -3px rgba(59, 130, 246, 0.4)',
+                      '0 4px 6px -1px rgba(59, 130, 246, 0.3)'
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center"
+                    >
+                      <span className="text-xs">👩‍💼</span>
+                    </motion.div>
+                    <div className="flex-1">
+                      <p className={`text-xs font-bold ${isDark ? 'text-[#6366F1]' : 'text-blue-900'}`}>
+                        AI Interviewer
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <motion.div
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="w-1.5 h-1.5 rounded-full bg-blue-600"
+                        />
+                        <span className={`text-xs font-medium ${isDark ? 'text-[#9CA3AF]' : 'text-blue-700'}`}>
+                          Speaking...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transcript Text with typing effect */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <p className={`text-sm leading-relaxed ${isDark ? 'text-[#F9FAFB]' : 'text-gray-800'}`}>
+                      {currentQuestion.text}
+                    </p>
+                  </motion.div>
+
+                  {/* Sound Wave Animation */}
+                  <div className="flex items-center gap-0.5 mt-3 justify-center">
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{ 
+                          height: [4, 16, 4],
+                          opacity: [0.3, 1, 0.3]
+                        }}
+                        transition={{ 
+                          duration: 1, 
+                          repeat: Infinity,
+                          delay: i * 0.1,
+                          ease: "easeInOut"
+                        }}
+                        className="w-0.5 bg-blue-500 rounded-full"
+                        style={{ height: '4px' }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Pulse Ring Effect */}
+                <motion.div
+                  className="absolute -inset-1 bg-blue-400 rounded-xl -z-10"
+                  animate={{ 
+                    opacity: [0.1, 0.3, 0.1],
+                    scale: [0.98, 1.02, 0.98]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* User Speaking Transcript */}
+          <AnimatePresence mode="wait">
+            {liveTranscript && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="relative"
+              >
+                <motion.div
+                  className={`rounded-xl p-4 border-2 shadow-lg ${
+                    isDark
+                      ? 'bg-gradient-to-br from-[#1F2937] to-[#111827] border-green-500'
+                      : 'bg-gradient-to-br from-green-50 to-green-100 border-green-300'
+                  }`}
+                  animate={{ 
+                    boxShadow: [
+                      '0 4px 6px -1px rgba(34, 197, 94, 0.3)',
+                      '0 10px 15px -3px rgba(34, 197, 94, 0.4)',
+                      '0 4px 6px -1px rgba(34, 197, 94, 0.3)'
+                    ]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  {/* Header */}
+                  <div className="flex items-center gap-2 mb-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center"
+                    >
+                      <Mic className="h-3 w-3 text-white" />
+                    </motion.div>
+                    <div className="flex-1">
+                      <p className={`text-xs font-bold ${isDark ? 'text-green-400' : 'text-green-900'}`}>
+                        You
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <motion.div
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                          className="w-1.5 h-1.5 rounded-full bg-green-600"
+                        />
+                        <span className={`text-xs font-medium ${isDark ? 'text-[#9CA3AF]' : 'text-green-700'}`}>
+                          Speaking...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transcript Text with animated appearance */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative"
+                  >
+                    <p className={`text-sm leading-relaxed ${isDark ? 'text-[#F9FAFB]' : 'text-gray-800'}`}>
+                      {liveTranscript}
+                    </p>
+                    {/* Typing cursor */}
+                    <motion.span
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 0.8, repeat: Infinity }}
+                      className="inline-block w-0.5 h-4 bg-green-600 ml-1 align-middle"
+                    />
+                  </motion.div>
+
+                  {/* Sound Wave Animation */}
+                  <div className="flex items-center gap-0.5 mt-3 justify-center">
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        animate={{ 
+                          height: [4, 20, 4],
+                          opacity: [0.3, 1, 0.3]
+                        }}
+                        transition={{ 
+                          duration: 0.8, 
+                          repeat: Infinity,
+                          delay: i * 0.08,
+                          ease: "easeInOut"
+                        }}
+                        className="w-0.5 bg-green-500 rounded-full"
+                        style={{ height: '4px' }}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Pulse Ring Effect */}
+                <motion.div
+                  className="absolute -inset-1 bg-green-400 rounded-xl -z-10"
+                  animate={{ 
+                    opacity: [0.1, 0.3, 0.1],
+                    scale: [0.98, 1.02, 0.98]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Idle State - When no one is speaking */}
+          {!liveTranscript && aiState.status !== 'speaking' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-12 text-center"
+            >
+              <motion.div
+                animate={{ 
+                  y: [0, -10, 0],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="text-4xl mb-4"
+              >
+                🎙️
+              </motion.div>
+              <p className="text-sm font-medium text-gray-600 mb-1">
+                {aiState.status === 'listening' ? 'Listening...' : 'Ready for Interview'}
+              </p>
+              <p className="text-xs text-gray-400">
+                Transcript will appear here
+              </p>
+            </motion.div>
           )}
         </div>
       </div>
 
       {showEndConfirm && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-8 max-w-md shadow-2xl">
-            <h3 className="text-2xl font-bold mb-4">Leave Interview?</h3>
-            <p className="text-gray-600 mb-6">Your responses will be submitted.</p>
+          <div className={`rounded-xl p-8 max-w-md shadow-2xl ${
+            isDark ? 'bg-[#111827]' : 'bg-white'
+          }`}>
+            <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-[#F9FAFB]' : 'text-gray-900'}`}>
+              Leave Interview?
+            </h3>
+            <p className={`mb-6 ${isDark ? 'text-[#9CA3AF]' : 'text-gray-600'}`}>
+              Your responses will be submitted.
+            </p>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setShowEndConfirm(false)} className="flex-1">
                 Cancel
