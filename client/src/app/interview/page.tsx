@@ -30,6 +30,8 @@ import {
   Circle,
   Lightbulb,
   MessageSquare,
+  Moon,
+  Sun,
 } from 'lucide-react'
 
 export default function InterviewPage() {
@@ -57,6 +59,20 @@ export default function InterviewPage() {
   const [showEndConfirm, setShowEndConfirm] = useState(false)
   const [avatarPosition, setAvatarPosition] = useState({ x: 0, y: 0 }) // Starting position at top-left corner (no padding)
   const [isSwapped, setIsSwapped] = useState(false) // Track if views are swapped
+  const [isDarkMode, setIsDarkMode] = useState(true) // Default to dark mode
+
+  // Toggle theme
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [isDarkMode])
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode)
+  }
 
   // Simulate interview flow
   useEffect(() => {
@@ -265,14 +281,139 @@ export default function InterviewPage() {
                 REC
               </Badge>
             )}
+
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="w-9 h-9"
+              title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Main Content - 2 Column Layout */}
+      {/* Main Content - 3 Column Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-hidden">
-        {/* Left Panel - Video with Overlays */}
-        <div className="lg:col-span-9 relative flex items-start justify-start">
+        {/* Left Panel - Interview Info */}
+        <div className="lg:col-span-3 flex flex-col gap-4 overflow-y-auto">
+          {/* Interview Info Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-card rounded-lg p-4 border"
+          >
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" />
+              Interview Information
+            </h3>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Company</p>
+                <p className="text-sm font-medium text-foreground mt-0.5">
+                  {mockInterviewInvitation.companyName}
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-xs text-muted-foreground">Position</p>
+                <p className="text-sm font-medium text-foreground mt-0.5">
+                  {mockInterviewInvitation.jobPosition}
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-xs text-muted-foreground">Duration</p>
+                <p className="text-sm font-medium text-foreground mt-0.5">
+                  {mockInterviewInvitation.estimatedDuration} minutes
+                </p>
+              </div>
+              
+              <div>
+                <p className="text-xs text-muted-foreground">Time Elapsed</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 font-mono">
+                  {formatTime(elapsedTime)}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Interview Steps Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-card rounded-lg p-4 border"
+          >
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-primary" />
+              Interview Steps
+            </h3>
+
+            <div className="space-y-2">
+              {stages.map((stage, index) => {
+                const isCompleted = index < currentStageIndex
+                const isCurrent = index === currentStageIndex
+                const isUpcoming = index > currentStageIndex
+
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      'flex items-center gap-2 p-2 rounded-md transition-colors',
+                      isCurrent
+                        ? 'bg-primary/10 border border-primary/20'
+                        : 'bg-muted/30'
+                    )}
+                  >
+                    <div className="flex-shrink-0">
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-4 w-4 text-success" />
+                      ) : isCurrent ? (
+                        <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                          <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                        </div>
+                      ) : (
+                        <Circle className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={cn(
+                          'text-xs font-medium truncate',
+                          isCurrent
+                            ? 'text-primary'
+                            : isCompleted
+                            ? 'text-foreground'
+                            : 'text-muted-foreground'
+                        )}
+                      >
+                        {stage.stage}
+                      </p>
+                    </div>
+
+                    {isCurrent && (
+                      <ChevronRight className="h-3 w-3 text-primary animate-pulse" />
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Center Panel - Video with Overlays and Controls */}
+        <div className="lg:col-span-6 flex flex-col items-center gap-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -437,6 +578,67 @@ export default function InterviewPage() {
               </AnimatePresence>
             </div>
           </motion.div>
+
+          {/* Control Buttons - Directly Below Camera */}
+          <div className="flex items-center justify-center gap-2" style={{ width: '580px' }}>
+            <Button
+              variant={isMicrophoneOn ? 'default' : 'destructive'}
+              size="icon"
+              onClick={toggleMicrophone}
+              className="w-12 h-12"
+              title={isMicrophoneOn ? 'Mute' : 'Unmute'}
+            >
+              {isMicrophoneOn ? (
+                <Mic className="h-5 w-5" />
+              ) : (
+                <MicOff className="h-5 w-5" />
+              )}
+            </Button>
+
+            <Button
+              variant={isCameraOn ? 'default' : 'secondary'}
+              size="icon"
+              onClick={toggleCamera}
+              className="w-12 h-12"
+              title={isCameraOn ? 'Turn Camera Off' : 'Turn Camera On'}
+            >
+              {isCameraOn ? (
+                <Video className="h-5 w-5" />
+              ) : (
+                <VideoOff className="h-5 w-5" />
+              )}
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-12 h-12"
+              title="Settings"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="w-12 h-12"
+              title="Help"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+
+            <div className="flex-1" />
+
+            <Button
+              variant="destructive"
+              size="default"
+              onClick={handleEndInterview}
+              className="px-6"
+            >
+              <Square className="h-4 w-4 mr-2" />
+              End Interview
+            </Button>
+          </div>
         </div>
 
         {/* Right Panel - Interview Information */}
@@ -564,79 +766,6 @@ export default function InterviewPage() {
         </div>
       </div>
 
-      {/* Bottom Section - Transcript + Controls */}
-      <div className="border-t bg-card">
-        {/* Live Transcript */}
-        <div className="px-6 pt-4">
-          <TranscriptPanel
-            liveTranscript={liveTranscript}
-            isListening={aiState.status === 'listening'}
-          />
-        </div>
-
-        {/* Control Buttons */}
-        <div className="px-6 py-4 flex items-center justify-center gap-3">
-          <Button
-            variant={isMicrophoneOn ? 'default' : 'destructive'}
-            size="lg"
-            onClick={toggleMicrophone}
-            className="min-w-[120px]"
-          >
-            {isMicrophoneOn ? (
-              <>
-                <Mic className="h-5 w-5 mr-2" />
-                Mute
-              </>
-            ) : (
-              <>
-                <MicOff className="h-5 w-5 mr-2" />
-                Unmuted
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant={isCameraOn ? 'default' : 'secondary'}
-            size="lg"
-            onClick={toggleCamera}
-            className="min-w-[120px]"
-          >
-            {isCameraOn ? (
-              <>
-                <Video className="h-5 w-5 mr-2" />
-                Camera On
-              </>
-            ) : (
-              <>
-                <VideoOff className="h-5 w-5 mr-2" />
-                Camera Off
-              </>
-            )}
-          </Button>
-
-          <Button variant="ghost" size="lg">
-            <Settings className="h-5 w-5 mr-2" />
-            Settings
-          </Button>
-
-          <Button variant="ghost" size="lg">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            Help
-          </Button>
-
-          <div className="flex-1" />
-
-          <Button
-            variant="destructive"
-            size="lg"
-            onClick={handleEndInterview}
-            className="min-w-[140px]"
-          >
-            <Square className="h-5 w-5 mr-2" />
-            End Interview
-          </Button>
-        </div>
-      </div>
 
       {/* End Interview Confirmation Dialog */}
       {showEndConfirm && (
