@@ -268,7 +268,7 @@ export default function InterviewPage() {
       {/* Main Content - 3 Column Layout */}
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6 overflow-hidden">
         {/* Left Panel - AI Interviewer + Question */}
-        <div className="lg:col-span-6 flex flex-col gap-6">
+        <div className="lg:col-span-4 flex flex-col gap-6">
           {/* AI Avatar */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -288,8 +288,8 @@ export default function InterviewPage() {
           </AnimatePresence>
         </div>
 
-        {/* Center Panel - Candidate Video (Smaller) */}
-        <div className="lg:col-span-3">
+        {/* Center Panel - Candidate Video */}
+        <div className="lg:col-span-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -300,12 +300,12 @@ export default function InterviewPage() {
               isCameraOn={isCameraOn}
               isRecording={mockInterviewInvitation.recordingEnabled}
               showControls={true}
-              className="h-full min-h-[300px] max-h-[400px]"
+              className="h-full min-h-[300px] max-h-[550px]"
             />
           </motion.div>
         </div>
 
-        {/* Right Panel - Interview Information (Narrower) */}
+        {/* Right Panel - Interview Information */}
         <div className="lg:col-span-3 flex flex-col gap-6">
           <motion.div
             initial={{ opacity: 0, x: 20 }}
